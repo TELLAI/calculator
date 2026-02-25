@@ -8,6 +8,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export type Recolte = {
   id: string;
   created_at: string;
+  recolte_date: string | null;
 
   billet_100: number;
   billet_50: number;

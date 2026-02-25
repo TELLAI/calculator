@@ -3,12 +3,18 @@
 @tailwind utilities;
 
 :root {
-  --background: #faf9f7;
-  --foreground: #1a1a1a;
+  --background: #F2F2F7;
+  --foreground: #2C2C2E;
   --card: #ffffff;
-  --border: #e5e3df;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
+  --border: #E5E3DF;
+  --input-border: #D1D1D6;
+  --accent: #007AFF;
+  --accent-hover: #0051D5;
+  --success: #22c55e;
+  --success-bg: #dcfce7;
+  --success-hover: #16a34a;
+  --header-bg: #202020;
+  --muted: #6b7280;
 }
 
 body {
@@ -19,5 +25,11 @@ body {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+@media print {
+  body {
+    background: white;
   }
 }
