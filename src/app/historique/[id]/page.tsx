@@ -152,15 +152,14 @@ export default function DetailRecoltePage() {
                     {totalB.toFixed(2)} €
                   </td>
                 </tr>
-                {PIECES.map(({ key, label, valeur }) => {
-                  const qty = recolte[key] || 0;
-                  const montant = qty * valeur;
+                {PIECES.map(({ key, label }) => {
+                  const montant = recolte[key] ?? 0;
                   return (
                     <tr key={key} className="border-b border-[var(--border)]">
                       <td className="py-1.5">{label}</td>
-                      <td className="text-center">{qty}</td>
+                      <td className="text-center">—</td>
                       <td className="text-right font-medium text-[var(--accent)]">
-                        {montant.toFixed(2)} €
+                        {Number(montant).toFixed(2)} €
                       </td>
                     </tr>
                   );

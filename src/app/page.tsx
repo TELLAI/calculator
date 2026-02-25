@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { RecolteFormBody } from "@/components/RecolteFormBody";
@@ -49,6 +50,7 @@ function parsePersonnes(s: string): string[] {
 }
 
 export default function Home() {
+  const router = useRouter();
   const { logout } = useAuth();
   const [form, setForm] = useState<FormState>(initialForm);
   const [currentPerson, setCurrentPerson] = useState("");
@@ -89,14 +91,14 @@ export default function Home() {
         billet_20: form.billet_20,
         billet_10: form.billet_10,
         billet_5: form.billet_5,
-        piece_2: form.piece_2,
-        piece_1: form.piece_1,
-        piece_050: form.piece_050,
-        piece_020: form.piece_020,
-        piece_010: form.piece_010,
-        piece_005: form.piece_005,
-        piece_002: form.piece_002,
-        piece_001: form.piece_001,
+        piece_2: toNum(form.piece_2),
+        piece_1: toNum(form.piece_1),
+        piece_050: toNum(form.piece_050),
+        piece_020: toNum(form.piece_020),
+        piece_010: toNum(form.piece_010),
+        piece_005: toNum(form.piece_005),
+        piece_002: toNum(form.piece_002),
+        piece_001: toNum(form.piece_001),
         cotisation_adherents: toNum(form.cotisation_adherents),
         cheques: toNum(form.cheques),
         carte_bancaire: toNum(form.carte_bancaire),
@@ -105,9 +107,8 @@ export default function Home() {
         observations: form.observations || null,
       });
       if (error) throw error;
-      setForm(getInitialForm());
-      setCurrentPerson("");
-      setMessage({ type: "ok", text: "Récolte enregistrée." });
+      router.push("/historique");
+      router.refresh();
     } catch (err) {
       setMessage({
         type: "err",
