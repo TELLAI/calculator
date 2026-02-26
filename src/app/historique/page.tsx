@@ -19,7 +19,7 @@ function getDateForRecolte(r: Recolte): Date {
 }
 
 export default function HistoriquePage() {
-  const { role, logout } = useAuth();
+  const { role, logout, organizationName } = useAuth();
   const [recoltes, setRecoltes] = useState<Recolte[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -113,20 +113,25 @@ export default function HistoriquePage() {
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      <header className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--card)] px-4 py-3 shadow-sm">
+      <header className="relative flex items-center justify-between border-b border-[var(--border)] bg-[var(--card)] px-4 py-3 shadow-sm">
         <Link
           href="/"
           className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--accent-hover)]"
         >
           + Nouvelle récolte
         </Link>
-        <button
-          type="button"
-          onClick={logout}
-          className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
-        >
-          Déconnexion
-        </button>
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center font-medium text-[var(--foreground)]">
+          {organizationName ?? "Récoltes"}
+        </div>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={logout}
+            className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
+          >
+            Déconnexion
+          </button>
+        </div>
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-6">

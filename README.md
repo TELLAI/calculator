@@ -19,7 +19,8 @@ Application (Next.js + Supabase) pour enregistrer et consulter les récoltes de 
 2. **Configurer Supabase**
    - Crée un projet sur [supabase.com](https://supabase.com).
    - Dans **Authentication → Providers**, active **Email** (login par email / mot de passe).
-   - Dans **SQL Editor**, exécute tout le script `supabase/schema.sql` (tables `recoltes`, `profiles`, RLS, trigger).
+   - Dans **SQL Editor**, exécute tout le script `supabase/schema.sql` (tables `organizations`, `recoltes`, `profiles`, RLS, trigger).
+   - **Si tu as déjà une base existante** sans organisations : exécute ensuite `supabase/migrations/005_organizations.sql` pour ajouter la table `organizations`, rattacher profils et récoltes à une organisation par défaut, et mettre à jour les RLS.
    - Dans **Project Settings → API**, copie l’URL et la clé **anon public**.
    - Crée un fichier `.env.local` à la racine (voir `.env.example`) :
      ```
@@ -29,11 +30,9 @@ Application (Next.js + Supabase) pour enregistrer et consulter les récoltes de 
 
 3. **Créer des utilisateurs et rôles**
    - Dans **Authentication → Users**, crée au moins un utilisateur (ou inscris-toi via l’app si tu ajoutes une page d’inscription).
-   - Par défaut, le trigger `on_auth_user_created` crée un profil avec le rôle **user**.
-   - Pour donner le rôle **admin** (création + suppression de récoltes), exécute dans SQL Editor en remplaçant `USER_UUID` par l’id de l’utilisateur :
-     ```sql
-     update profiles set role = 'admin' where user_id = 'USER_UUID';
-     ```
+   - Par défaut, le trigger `on_auth_user_created` crée un profil avec le rôle **user** et le rattache à la première organisation.
+   - Pour donner le rôle **admin** : `update profiles set role = 'admin' where user_id = 'USER_UUID';`
+   - Pour rattacher un utilisateur à une autre organisation : `update profiles set organization_id = 'ORGANIZATION_UUID' where user_id = 'USER_UUID';`
 
 4. **Lancer en dev**
    ```bash
@@ -48,10 +47,16 @@ Application (Next.js + Supabase) pour enregistrer et consulter les récoltes de 
 - **/historique** : liste des récoltes des 3 derniers mois. Chaque récolte a un lien **Voir le détail**. Les **admin** voient en plus un bouton **Supprimer**.
 - **/historique/[id]** : détail d’une récolte (tableau complet). Bouton **Imprimer / Enregistrer en PDF** (ouvre la boîte de dialogue d’impression du navigateur : imprimante ou « Enregistrer en PDF »). Les admin peuvent **Supprimer la récolte**.
 
+## Organisations (multi-tenant)
+
+- Chaque **organisation** a ses propres récoltes. Les utilisateurs sont rattachés à une organisation via leur profil (`organization_id`).
+- Un utilisateur ne voit et ne crée que les récoltes de son organisation. Les RLS Supabase appliquent ce filtrage.
+- Pour créer une nouvelle organisation : `insert into organizations (name) values ('Nom de l''association');` puis rattacher des utilisateurs avec `update profiles set organization_id = 'NEW_ORG_ID' where user_id = 'USER_ID';`
+
 ## Rôles
 
 - **user** : peut créer des récoltes et consulter l’historique / détail / imprimer. Ne peut pas supprimer.
-- **admin** : idem + peut supprimer des récoltes.
+- **admin** : idem + peut supprimer et modifier des récoltes (toujours dans le cadre de son organisation).
 
 ## Suppression automatique des récoltes de plus de 3 mois (cron)
 

@@ -9,6 +9,7 @@ export type Recolte = {
   id: string;
   created_at: string;
   recolte_date: string | null;
+  organization_id: string;
 
   billet_100: number;
   billet_50: number;

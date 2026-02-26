@@ -51,7 +51,7 @@ function parsePersonnes(s: string): string[] {
 
 export default function Home() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, organizationId, organizationName } = useAuth();
   const [form, setForm] = useState<FormState>(initialForm);
   const [currentPerson, setCurrentPerson] = useState("");
   const [saving, setSaving] = useState(false);
@@ -81,10 +81,18 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!organizationId) {
+      setMessage({
+        type: "err",
+        text: "Vous n'êtes rattaché à aucune organisation. Contactez un administrateur.",
+      });
+      return;
+    }
     setSaving(true);
     setMessage(null);
     try {
       const { error } = await supabase.from("recoltes").insert({
+        organization_id: organizationId,
         recolte_date: form.recolte_date || null,
         billet_100: form.billet_100,
         billet_50: form.billet_50,
@@ -127,8 +135,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      <header className="flex items-center justify-between bg-[var(--header-bg)] px-4 py-3 text-white">
-        <span className="text-sm font-medium opacity-90">Application Récoltes</span>
+      <header className="relative flex items-center justify-between bg-[var(--header-bg)] px-4 py-3 text-white">
         <div className="flex items-center gap-3">
           <Link
             href="/historique"
@@ -136,6 +143,11 @@ export default function Home() {
           >
             Historique
           </Link>
+        </div>
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center font-medium">
+          {organizationName ?? "Application Récoltes"}
+        </div>
+        <div className="flex justify-end">
           <button
             type="button"
             onClick={logout}

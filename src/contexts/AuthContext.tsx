@@ -15,6 +15,8 @@ type Role = "admin" | "user" | null;
 type AuthState = {
   user: User | null;
   role: Role;
+  organizationId: string | null;
+  organizationName: string | null;
   loading: boolean;
   logout: () => Promise<void>;
 };
@@ -22,6 +24,8 @@ type AuthState = {
 const AuthContext = createContext<AuthState>({
   user: null,
   role: null,
+  organizationId: null,
+  organizationName: null,
   loading: true,
   logout: async () => {},
 });
@@ -29,15 +33,29 @@ const AuthContext = createContext<AuthState>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<Role>(null);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [organizationName, setOrganizationName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase
+    const { data: profile } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, organization_id")
       .eq("user_id", userId)
       .single();
-    setRole((data?.role as Role) ?? "user");
+    setRole((profile?.role as Role) ?? "user");
+    const orgId = profile?.organization_id ?? null;
+    setOrganizationId(orgId);
+    if (orgId) {
+      const { data: org } = await supabase
+        .from("organizations")
+        .select("name")
+        .eq("id", orgId)
+        .single();
+      setOrganizationName(org?.name ?? null);
+    } else {
+      setOrganizationName(null);
+    }
   }, []);
 
   useEffect(() => {
@@ -50,6 +68,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await fetchProfile(session.user.id);
       } else {
         setRole(null);
+        setOrganizationId(null);
+        setOrganizationName(null);
       }
       setLoading(false);
     };
@@ -63,6 +83,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await fetchProfile(session.user.id);
       } else {
         setRole(null);
+        setOrganizationId(null);
+        setOrganizationName(null);
       }
     });
 
@@ -75,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, role, loading, logout }}>
+    <AuthContext.Provider value={{ user, role, organizationId, organizationName, loading, logout }}>
       {children}
     </AuthContext.Provider>
   );

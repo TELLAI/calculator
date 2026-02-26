@@ -19,7 +19,7 @@ import type { Recolte } from "@/lib/supabase";
 export default function DetailRecoltePage() {
   const params = useParams();
   const router = useRouter();
-  const { role, logout } = useAuth();
+  const { role, logout, organizationName } = useAuth();
   const id = params.id as string;
   const [recolte, setRecolte] = useState<Recolte | null>(null);
   const [loading, setLoading] = useState(true);
@@ -93,18 +93,22 @@ export default function DetailRecoltePage() {
   return (
     <>
       <div className="min-h-screen bg-[var(--background)]">
-        <header className="flex items-center justify-between bg-[var(--header-bg)] px-4 py-3 text-white print:hidden">
+        <header className="relative flex items-center justify-between bg-[var(--header-bg)] px-4 py-3 text-white print:hidden">
           <Link href="/historique" className="text-sm text-white/90 hover:text-white">
             ← Historique
           </Link>
-          <h1 className="text-base font-semibold">Détail de la récolte</h1>
-          <button
-            type="button"
-            onClick={logout}
-            className="rounded bg-white/10 px-3 py-1.5 text-sm hover:bg-white/20"
-          >
-            Déconnexion
-          </button>
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center font-medium">
+            {organizationName ?? "Récoltes"}
+          </div>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={logout}
+              className="rounded bg-white/10 px-3 py-1.5 text-sm hover:bg-white/20"
+            >
+              Déconnexion
+            </button>
+          </div>
         </header>
 
         <main className="mx-auto max-w-2xl px-4 py-6 print:max-w-none print:px-6">
