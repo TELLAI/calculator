@@ -2,9 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import type { Recolte } from "@/lib/supabase";
+import type { Recolte } from "@/lib/types";
 import {
   totalRecolte,
   totalBillets,
@@ -28,21 +27,19 @@ export default function HistoriquePage() {
   const isAdmin = role === "admin";
 
   const load = () => {
-    const troisMois = new Date();
-    troisMois.setMonth(troisMois.getMonth() - 3);
-    supabase
-      .from("recoltes")
-      .select("*")
-      .gte("created_at", troisMois.toISOString())
-      .order("recolte_date", { ascending: false, nullsFirst: false })
-      .order("created_at", { ascending: false })
-      .then(({ data, error: err }) => {
+    setLoading(true);
+    fetch("/api/recoltes")
+      .then((res) => {
+        if (!res.ok) throw new Error("Erreur de chargement");
+        return res.json();
+      })
+      .then((data: Recolte[]) => {
+        setRecoltes(data);
         setLoading(false);
-        if (err) {
-          setError(err.message);
-          return;
-        }
-        setRecoltes((data as Recolte[]) || []);
+      })
+      .catch((err: Error) => {
+        setError(err.message);
+        setLoading(false);
       });
   };
 
@@ -91,21 +88,17 @@ export default function HistoriquePage() {
       tendanceMois = 100;
     }
 
-    return {
-      totalCollecte: total,
-      moyenneMois,
-      tendanceMois,
-    };
+    return { totalCollecte: total, moyenneMois, tendanceMois };
   }, [recoltes]);
 
   const handleDelete = async (id: string) => {
     if (!isAdmin) return;
     if (!confirm("Supprimer cette récolte ?")) return;
     setDeletingId(id);
-    const { error: err } = await supabase.from("recoltes").delete().eq("id", id);
+    const res = await fetch(`/api/recoltes/${id}`, { method: "DELETE" });
     setDeletingId(null);
-    if (err) {
-      setError(err.message);
+    if (!res.ok) {
+      setError("Erreur lors de la suppression.");
       return;
     }
     setRecoltes((prev) => prev.filter((r) => r.id !== id));

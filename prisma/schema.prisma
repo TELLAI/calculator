@@ -1,0 +1,70 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "darwin-arm64", "linux-arm64-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password_hash String
+  created_at    DateTime @default(now())
+  profile       Profile?
+
+  @@map("users")
+}
+
+model Organization {
+  id         String    @id @default(uuid())
+  name       String
+  created_at DateTime  @default(now())
+  profiles   Profile[]
+  recoltes   Recolte[]
+
+  @@map("organizations")
+}
+
+model Profile {
+  id              String        @id @default(uuid())
+  user_id         String        @unique
+  organization_id String?
+  role            String
+  created_at      DateTime      @default(now())
+  user            User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  organization    Organization? @relation(fields: [organization_id], references: [id])
+
+  @@map("profiles")
+}
+
+model Recolte {
+  id                   String       @id @default(uuid())
+  created_at           DateTime     @default(now())
+  recolte_date         DateTime?    @db.Date
+  organization_id      String
+  billet_100           Int          @default(0)
+  billet_50            Int          @default(0)
+  billet_20            Int          @default(0)
+  billet_10            Int          @default(0)
+  billet_5             Int          @default(0)
+  piece_2              Float        @default(0)
+  piece_1              Float        @default(0)
+  piece_050            Float        @default(0)
+  piece_020            Float        @default(0)
+  piece_010            Float        @default(0)
+  piece_005            Float        @default(0)
+  piece_002            Float        @default(0)
+  piece_001            Float        @default(0)
+  cotisation_adherents Float        @default(0)
+  cheques              Float        @default(0)
+  carte_bancaire       Float        @default(0)
+  autres               Float        @default(0)
+  personnes_presentes  String?
+  observations         String?
+  organization         Organization @relation(fields: [organization_id], references: [id])
+
+  @@map("recoltes")
+}

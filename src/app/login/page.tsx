@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,12 +16,19 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const { error: err } = await supabase.auth.signInWithPassword({ email, password });
-      if (err) throw err;
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+      if (result?.error) {
+        setError("Email ou mot de passe incorrect.");
+        return;
+      }
       router.push("/");
       router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur de connexion.");
+    } catch {
+      setError("Erreur de connexion.");
     } finally {
       setLoading(false);
     }

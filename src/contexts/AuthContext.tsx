@@ -1,19 +1,12 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import { supabase } from "@/lib/supabase";
-import type { User } from "@supabase/supabase-js";
+import { createContext, useCallback, useContext } from "react";
+import { useSession, signOut, SessionProvider } from "next-auth/react";
 
 type Role = "admin" | "user" | null;
 
 type AuthState = {
-  user: User | null;
+  user: { id: string; email: string } | null;
   role: Role;
   organizationId: string | null;
   organizationName: string | null;
@@ -30,76 +23,36 @@ const AuthContext = createContext<AuthState>({
   logout: async () => {},
 });
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<Role>(null);
-  const [organizationId, setOrganizationId] = useState<string | null>(null);
-  const [organizationName, setOrganizationName] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchProfile = useCallback(async (userId: string) => {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role, organization_id")
-      .eq("user_id", userId)
-      .single();
-    setRole((profile?.role as Role) ?? "user");
-    const orgId = profile?.organization_id ?? null;
-    setOrganizationId(orgId);
-    if (orgId) {
-      const { data: org } = await supabase
-        .from("organizations")
-        .select("name")
-        .eq("id", orgId)
-        .single();
-      setOrganizationName(org?.name ?? null);
-    } else {
-      setOrganizationName(null);
-    }
-  }, []);
-
-  useEffect(() => {
-    const init = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      if (session?.user?.id) {
-        await fetchProfile(session.user.id);
-      } else {
-        setRole(null);
-        setOrganizationId(null);
-        setOrganizationName(null);
-      }
-      setLoading(false);
-    };
-    init();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user?.id) {
-        await fetchProfile(session.user.id);
-      } else {
-        setRole(null);
-        setOrganizationId(null);
-        setOrganizationName(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+function AuthContextInner({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
 
   const logout = useCallback(async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/login";
+    await signOut({ callbackUrl: "/login" });
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, role, organizationId, organizationName, loading, logout }}>
+    <AuthContext.Provider
+      value={{
+        user: session?.user
+          ? { id: session.user.id, email: session.user.email! }
+          : null,
+        role: (session?.user?.role as Role) ?? null,
+        organizationId: session?.user?.organizationId ?? null,
+        organizationName: session?.user?.organizationName ?? null,
+        loading: status === "loading",
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
+  );
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <SessionProvider>
+      <AuthContextInner>{children}</AuthContextInner>
+    </SessionProvider>
   );
 }
 

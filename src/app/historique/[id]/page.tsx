@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { BILLETS, PIECES } from "@/lib/constants";
 import {
@@ -14,7 +13,7 @@ import {
   formatDate,
   formatRecolteDate,
 } from "@/lib/recolte-utils";
-import type { Recolte } from "@/lib/supabase";
+import type { Recolte } from "@/lib/types";
 
 export default function DetailRecoltePage() {
   const params = useParams();
@@ -30,18 +29,18 @@ export default function DetailRecoltePage() {
   const isAdmin = role === "admin";
 
   useEffect(() => {
-    supabase
-      .from("recoltes")
-      .select("*")
-      .eq("id", id)
-      .single()
-      .then(({ data, error: err }) => {
+    fetch(`/api/recoltes/${id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Récolte introuvable.");
+        return res.json();
+      })
+      .then((data: Recolte) => {
+        setRecolte(data);
         setLoading(false);
-        if (err) {
-          setError(err.message);
-          return;
-        }
-        setRecolte(data as Recolte);
+      })
+      .catch((err: Error) => {
+        setError(err.message);
+        setLoading(false);
       });
   }, [id]);
 
@@ -53,10 +52,10 @@ export default function DetailRecoltePage() {
     if (!isAdmin) return;
     if (!confirm("Supprimer définitivement cette récolte ?")) return;
     setDeleting(true);
-    const { error: err } = await supabase.from("recoltes").delete().eq("id", id);
+    const res = await fetch(`/api/recoltes/${id}`, { method: "DELETE" });
     setDeleting(false);
-    if (err) {
-      setError(err.message);
+    if (!res.ok) {
+      setError("Erreur lors de la suppression.");
       return;
     }
     router.push("/historique");
@@ -75,11 +74,8 @@ export default function DetailRecoltePage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[var(--background)] px-4">
         <p className="text-red-600">{error || "Récolte introuvable."}</p>
-        <Link
-          href="/historique"
-          className="text-[var(--accent)] hover:underline"
-        >
-          Retour à l’historique
+        <Link href="/historique" className="text-[var(--accent)] hover:underline">
+          Retour à l&apos;historique
         </Link>
       </div>
     );
@@ -123,15 +119,9 @@ export default function DetailRecoltePage() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-[var(--border)]">
-                  <th className="pb-2 font-semibold text-[var(--foreground)]">
-                    DÉSIGNATION
-                  </th>
-                  <th className="w-16 text-center pb-2 font-semibold text-[var(--foreground)]">
-                    QTÉ
-                  </th>
-                  <th className="w-24 text-right pb-2 font-semibold text-[var(--foreground)]">
-                    MONTANT
-                  </th>
+                  <th className="pb-2 font-semibold text-[var(--foreground)]">DÉSIGNATION</th>
+                  <th className="w-16 text-center pb-2 font-semibold text-[var(--foreground)]">QTÉ</th>
+                  <th className="w-24 text-right pb-2 font-semibold text-[var(--foreground)]">MONTANT</th>
                 </tr>
               </thead>
               <tbody>
@@ -149,12 +139,8 @@ export default function DetailRecoltePage() {
                   );
                 })}
                 <tr className="border-b border-[var(--border)] bg-gray-100 font-semibold print:bg-gray-100">
-                  <td className="py-2" colSpan={2}>
-                    MONTANT TOTAL BILLETS
-                  </td>
-                  <td className="text-right text-[var(--accent)]">
-                    {totalB.toFixed(2)} €
-                  </td>
+                  <td className="py-2" colSpan={2}>MONTANT TOTAL BILLETS</td>
+                  <td className="text-right text-[var(--accent)]">{totalB.toFixed(2)} €</td>
                 </tr>
                 {PIECES.map(({ key, label }) => {
                   const montant = recolte[key] ?? 0;
@@ -169,12 +155,8 @@ export default function DetailRecoltePage() {
                   );
                 })}
                 <tr className="border-b border-[var(--border)] bg-gray-100 font-semibold print:bg-gray-100">
-                  <td className="py-2" colSpan={2}>
-                    MONTANT TOTAL PIÈCES
-                  </td>
-                  <td className="text-right text-[var(--accent)]">
-                    {totalP.toFixed(2)} €
-                  </td>
+                  <td className="py-2" colSpan={2}>MONTANT TOTAL PIÈCES</td>
+                  <td className="text-right text-[var(--accent)]">{totalP.toFixed(2)} €</td>
                 </tr>
                 <tr className="border-b border-[var(--border)]">
                   <td className="py-1.5">Cotisation adhérents</td>
@@ -205,17 +187,11 @@ export default function DetailRecoltePage() {
                   </td>
                 </tr>
                 <tr className="border-b border-[var(--border)] bg-gray-100 font-semibold print:bg-gray-100">
-                  <td className="py-2" colSpan={2}>
-                    MONTANT TOTAL AUTRES
-                  </td>
-                  <td className="text-right text-[var(--accent)]">
-                    {totalA.toFixed(2)} €
-                  </td>
+                  <td className="py-2" colSpan={2}>MONTANT TOTAL AUTRES</td>
+                  <td className="text-right text-[var(--accent)]">{totalA.toFixed(2)} €</td>
                 </tr>
                 <tr className="bg-[var(--success-bg)] font-semibold print:bg-[var(--success-bg)]">
-                  <td className="py-3" colSpan={2}>
-                    MONTANT TOTAL DE LA RÉCOLTE
-                  </td>
+                  <td className="py-3" colSpan={2}>MONTANT TOTAL DE LA RÉCOLTE</td>
                   <td className="text-right text-lg text-[var(--success)]">
                     {total.toFixed(2)} €
                   </td>
@@ -243,9 +219,7 @@ export default function DetailRecoltePage() {
                 )}
                 {recolte.observations && (
                   <p>
-                    <strong className="text-[var(--foreground)]">
-                      Observations :
-                    </strong>{" "}
+                    <strong className="text-[var(--foreground)]">Observations :</strong>{" "}
                     {recolte.observations}
                   </p>
                 )}
@@ -283,12 +257,11 @@ export default function DetailRecoltePage() {
               href="/historique"
               className="rounded-lg border border-[var(--border)] bg-white px-4 py-3 font-medium text-[var(--foreground)] hover:bg-[var(--background)]"
             >
-              Retour à l’historique
+              Retour à l&apos;historique
             </Link>
           </div>
         </main>
       </div>
-
     </>
   );
 }

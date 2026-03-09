@@ -1,4 +1,4 @@
-import type { Recolte } from "@/lib/supabase";
+import type { Recolte } from "@/lib/types";
 import type { FormState } from "@/app/form-types";
 
 export function recolteToFormState(r: Recolte): FormState {

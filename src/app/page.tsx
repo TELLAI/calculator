@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { RecolteFormBody } from "@/components/RecolteFormBody";
 import type { FormState } from "./form-types";
@@ -91,30 +90,36 @@ export default function Home() {
     setSaving(true);
     setMessage(null);
     try {
-      const { error } = await supabase.from("recoltes").insert({
-        organization_id: organizationId,
-        recolte_date: form.recolte_date || null,
-        billet_100: form.billet_100,
-        billet_50: form.billet_50,
-        billet_20: form.billet_20,
-        billet_10: form.billet_10,
-        billet_5: form.billet_5,
-        piece_2: toNum(form.piece_2),
-        piece_1: toNum(form.piece_1),
-        piece_050: toNum(form.piece_050),
-        piece_020: toNum(form.piece_020),
-        piece_010: toNum(form.piece_010),
-        piece_005: toNum(form.piece_005),
-        piece_002: toNum(form.piece_002),
-        piece_001: toNum(form.piece_001),
-        cotisation_adherents: toNum(form.cotisation_adherents),
-        cheques: toNum(form.cheques),
-        carte_bancaire: toNum(form.carte_bancaire),
-        autres: toNum(form.autres),
-        personnes_presentes: form.personnes_presentes || null,
-        observations: form.observations || null,
+      const res = await fetch("/api/recoltes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recolte_date: form.recolte_date || null,
+          billet_100: form.billet_100,
+          billet_50: form.billet_50,
+          billet_20: form.billet_20,
+          billet_10: form.billet_10,
+          billet_5: form.billet_5,
+          piece_2: toNum(form.piece_2),
+          piece_1: toNum(form.piece_1),
+          piece_050: toNum(form.piece_050),
+          piece_020: toNum(form.piece_020),
+          piece_010: toNum(form.piece_010),
+          piece_005: toNum(form.piece_005),
+          piece_002: toNum(form.piece_002),
+          piece_001: toNum(form.piece_001),
+          cotisation_adherents: toNum(form.cotisation_adherents),
+          cheques: toNum(form.cheques),
+          carte_bancaire: toNum(form.carte_bancaire),
+          autres: toNum(form.autres),
+          personnes_presentes: form.personnes_presentes || null,
+          observations: form.observations || null,
+        }),
       });
-      if (error) throw error;
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Erreur lors de l'enregistrement.");
+      }
       router.push("/historique");
       router.refresh();
     } catch (err) {

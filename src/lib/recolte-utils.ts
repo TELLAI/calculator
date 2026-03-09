@@ -1,5 +1,5 @@
 import { BILLETS, PIECES } from "@/lib/constants";
-import type { Recolte } from "@/lib/supabase";
+import type { Recolte } from "@/lib/types";
 
 export function totalBillets(r: Recolte): number {
   return BILLETS.reduce((s, b) => s + (r[b.key] || 0) * b.valeur, 0);

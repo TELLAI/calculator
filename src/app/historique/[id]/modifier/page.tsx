@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { RecolteFormBody } from "@/components/RecolteFormBody";
 import { recolteToFormState } from "@/lib/recolte-form";
 import type { FormState } from "@/app/form-types";
-import type { Recolte } from "@/lib/supabase";
+import type { Recolte } from "@/lib/types";
 
 function toNum(v: string | number): number {
   if (typeof v === "number") return v;
@@ -35,20 +34,19 @@ export default function ModifierRecoltePage() {
   const isAdmin = role === "admin";
 
   useEffect(() => {
-    supabase
-      .from("recoltes")
-      .select("*")
-      .eq("id", id)
-      .single()
-      .then(({ data, error: err }) => {
+    fetch(`/api/recoltes/${id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Récolte introuvable.");
+        return res.json();
+      })
+      .then((data: Recolte) => {
+        setRecolte(data);
+        setForm(recolteToFormState(data));
         setLoading(false);
-        if (err) {
-          setRecolte(null);
-          return;
-        }
-        const r = data as Recolte;
-        setRecolte(r);
-        setForm(recolteToFormState(r));
+      })
+      .catch(() => {
+        setRecolte(null);
+        setLoading(false);
       });
   }, [id]);
 
@@ -82,9 +80,10 @@ export default function ModifierRecoltePage() {
     setSaving(true);
     setMessage(null);
     try {
-      const { error } = await supabase
-        .from("recoltes")
-        .update({
+      const res = await fetch(`/api/recoltes/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           recolte_date: form.recolte_date || null,
           billet_100: form.billet_100,
           billet_50: form.billet_50,
@@ -105,9 +104,12 @@ export default function ModifierRecoltePage() {
           autres: toNum(form.autres),
           personnes_presentes: form.personnes_presentes || null,
           observations: form.observations || null,
-        })
-        .eq("id", id);
-      if (error) throw error;
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Erreur lors de l'enregistrement.");
+      }
       setMessage({ type: "ok", text: "Récolte modifiée." });
       router.push(`/historique/${id}`);
       router.refresh();
@@ -137,10 +139,7 @@ export default function ModifierRecoltePage() {
         <p className="text-center text-[var(--muted)]">
           Vous n&apos;avez pas les droits pour modifier cette récolte.
         </p>
-        <Link
-          href={`/historique/${id}`}
-          className="text-[var(--accent)] hover:underline"
-        >
+        <Link href={`/historique/${id}`} className="text-[var(--accent)] hover:underline">
           Retour au détail
         </Link>
       </div>
