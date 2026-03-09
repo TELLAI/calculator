@@ -28,11 +28,6 @@ jobs:
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           AUTH_URL: ${{ secrets.AUTH_URL }}
 
-      - name: Run database migrations
-        run: npx prisma migrate deploy
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
