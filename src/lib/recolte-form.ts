@@ -2,6 +2,16 @@ import type { Recolte } from "@/lib/types";
 import type { FormState } from "@/app/form-types";
 
 export function recolteToFormState(r: Recolte): FormState {
+  const total_pieces =
+    (r.piece_2 ?? 0) +
+    (r.piece_1 ?? 0) +
+    (r.piece_050 ?? 0) +
+    (r.piece_020 ?? 0) +
+    (r.piece_010 ?? 0) +
+    (r.piece_005 ?? 0) +
+    (r.piece_002 ?? 0) +
+    (r.piece_001 ?? 0);
+
   return {
     billet_100: r.billet_100 ?? 0,
     billet_50: r.billet_50 ?? 0,
@@ -16,6 +26,7 @@ export function recolteToFormState(r: Recolte): FormState {
     piece_005: r.piece_005 ?? 0,
     piece_002: r.piece_002 ?? 0,
     piece_001: r.piece_001 ?? 0,
+    total_pieces,
     cotisation_adherents: r.cotisation_adherents ?? 0,
     cheques: r.cheques ?? 0,
     carte_bancaire: r.carte_bancaire ?? 0,

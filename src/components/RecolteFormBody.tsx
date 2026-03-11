@@ -1,6 +1,6 @@
 "use client";
 
-import { BILLETS, PIECES } from "@/lib/constants";
+import { BILLETS } from "@/lib/constants";
 import type { FormState } from "@/app/form-types";
 
 function toNum(v: string | number): number {
@@ -43,7 +43,7 @@ export function RecolteFormBody({
   secondaryOnClick,
 }: Props) {
   const totalBillets = BILLETS.reduce((s, b) => s + (form[b.key] || 0) * b.valeur, 0);
-  const totalPieces = PIECES.reduce((s, p) => s + toNum(form[p.key]), 0);
+  const totalPieces = toNum(form.total_pieces);
   const totalAutres =
     toNum(form.cotisation_adherents) +
     toNum(form.cheques) +
@@ -124,45 +124,22 @@ export function RecolteFormBody({
       </section>
 
       <section>
-        <h3 className="mb-2 text-sm font-semibold text-[var(--foreground)]">PIÈCES (montant en €)</h3>
+        <h3 className="mb-2 text-sm font-semibold text-[var(--foreground)]">PIÈCES</h3>
         <div className="overflow-hidden rounded-lg border border-[var(--border)]">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-[var(--border)] bg-[var(--background)]">
-                <th className="px-3 py-2 text-xs font-semibold text-[var(--foreground)]">
-                  DÉSIGNATION
-                </th>
-                <th className="w-28 px-2 py-2 text-right text-xs font-semibold text-[var(--foreground)]">
-                  MONTANT (€)
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {PIECES.map(({ key, label }) => {
-                const montant = toNum(form[key]);
-                return (
-                  <tr
-                    key={key}
-                    className="border-b border-[var(--border)] last:border-0"
-                  >
-                    <td className="py-2 pl-3 text-sm font-medium text-[var(--foreground)]">
-                      {label}
-                    </td>
-                    <td className="py-2 pr-3">
-                      <input
-                        type="number"
-                        min={0}
-                        step={0.01}
-                        value={montant || ""}
-                        onChange={(e) => update(key, e.target.value)}
-                        className="w-full rounded border border-[var(--input-border)] bg-white px-2 py-1 text-right text-sm"
-                      />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="flex items-center justify-between px-3 py-3">
+            <span className="text-sm font-medium text-[var(--foreground)]">
+              Total pièces (€)
+            </span>
+            <input
+              type="number"
+              min={0}
+              step={0.01}
+              value={toNum(form.total_pieces) || ""}
+              onChange={(e) => update("total_pieces", e.target.value)}
+              placeholder="0.00"
+              className="w-28 rounded border border-[var(--input-border)] bg-white px-2 py-1 text-right text-sm"
+            />
+          </div>
         </div>
         <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
           MONTANT TOTAL PIÈCES :{" "}

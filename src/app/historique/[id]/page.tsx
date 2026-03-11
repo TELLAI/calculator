@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { BILLETS, PIECES } from "@/lib/constants";
+import { BILLETS } from "@/lib/constants";
 import {
   totalBillets,
   totalPieces,
@@ -142,18 +142,13 @@ export default function DetailRecoltePage() {
                   <td className="py-2" colSpan={2}>MONTANT TOTAL BILLETS</td>
                   <td className="text-right text-[var(--accent)]">{totalB.toFixed(2)} €</td>
                 </tr>
-                {PIECES.map(({ key, label }) => {
-                  const montant = recolte[key] ?? 0;
-                  return (
-                    <tr key={key} className="border-b border-[var(--border)]">
-                      <td className="py-1.5">{label}</td>
-                      <td className="text-center">—</td>
-                      <td className="text-right font-medium text-[var(--accent)]">
-                        {Number(montant).toFixed(2)} €
-                      </td>
-                    </tr>
-                  );
-                })}
+                <tr className="border-b border-[var(--border)]">
+                  <td className="py-1.5">Total pièces</td>
+                  <td className="text-center">—</td>
+                  <td className="text-right font-medium text-[var(--accent)]">
+                    {totalP.toFixed(2)} €
+                  </td>
+                </tr>
                 <tr className="border-b border-[var(--border)] bg-gray-100 font-semibold print:bg-gray-100">
                   <td className="py-2" colSpan={2}>MONTANT TOTAL PIÈCES</td>
                   <td className="text-right text-[var(--accent)]">{totalP.toFixed(2)} €</td>

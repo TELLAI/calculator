@@ -5,6 +5,7 @@ export type FormState = {
 } & {
   [K in PieceKey]: number;
 } & {
+  total_pieces: number;
   cotisation_adherents: number;
   cheques: number;
   carte_bancaire: number;
