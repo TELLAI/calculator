@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { useNavigation } from "@/contexts/NavigationContext";
 
 export default function LoginPage() {
-  const router = useRouter();
+  const { navigate } = useNavigation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,8 +25,7 @@ export default function LoginPage() {
         setError("Email ou mot de passe incorrect.");
         return;
       }
-      router.push("/");
-      router.refresh();
+      navigate("/");
     } catch {
       setError("Erreur de connexion.");
     } finally {
@@ -52,7 +51,8 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              className="w-full rounded-lg border border-[#D1D1D6] bg-white px-3 py-2 text-[#1a1a1a] placeholder:text-gray-400"
+              disabled={loading}
+              className="w-full rounded-lg border border-[#D1D1D6] bg-white px-3 py-2 text-[#1a1a1a] placeholder:text-gray-400 disabled:opacity-50"
               placeholder="vous@exemple.fr"
             />
           </div>
@@ -67,7 +67,8 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              className="w-full rounded-lg border border-[#D1D1D6] bg-white px-3 py-2 text-[#1a1a1a]"
+              disabled={loading}
+              className="w-full rounded-lg border border-[#D1D1D6] bg-white px-3 py-2 text-[#1a1a1a] disabled:opacity-50"
             />
           </div>
           {error && (
@@ -76,9 +77,35 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-[#22c55e] py-3 font-medium text-white hover:bg-[#16a34a] disabled:opacity-50"
+            className="relative w-full rounded-lg bg-[#22c55e] py-3 font-medium text-white hover:bg-[#16a34a] disabled:opacity-75"
           >
-            {loading ? "Connexion…" : "Se connecter"}
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg
+                  className="h-4 w-4 animate-spin"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  />
+                </svg>
+                Connexion en cours…
+              </span>
+            ) : (
+              "Se connecter"
+            )}
           </button>
         </form>
       </div>
