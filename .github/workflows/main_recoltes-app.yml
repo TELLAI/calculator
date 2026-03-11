@@ -34,7 +34,7 @@ jobs:
       - name: Prepare standalone package
         run: |
           cp -r .next/static .next/standalone/.next/static
-          cp -r public .next/standalone/public
+          [ -d public ] && cp -r public .next/standalone/public || echo "Pas de dossier public, on continue"
           echo "=== Contenu standalone ==="
           ls -la .next/standalone/
 
