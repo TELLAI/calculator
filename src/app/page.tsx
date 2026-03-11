@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigation } from "@/contexts/NavigationContext";
 import { RecolteFormBody } from "@/components/RecolteFormBody";
 import type { FormState } from "./form-types";
 
@@ -50,7 +50,7 @@ function parsePersonnes(s: string): string[] {
 }
 
 export default function Home() {
-  const router = useRouter();
+  const { navigate } = useNavigation();
   const { logout, organizationId, organizationName } = useAuth();
   const [form, setForm] = useState<FormState>(initialForm);
   const [currentPerson, setCurrentPerson] = useState("");
@@ -121,8 +121,7 @@ export default function Home() {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Erreur lors de l'enregistrement.");
       }
-      router.push("/historique");
-      router.refresh();
+      navigate("/historique");
     } catch (err) {
       setMessage({
         type: "err",

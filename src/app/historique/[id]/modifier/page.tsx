@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigation } from "@/contexts/NavigationContext";
 import { RecolteFormBody } from "@/components/RecolteFormBody";
 import { recolteToFormState } from "@/lib/recolte-form";
 import type { FormState } from "@/app/form-types";
@@ -22,6 +23,7 @@ function parsePersonnes(s: string): string[] {
 export default function ModifierRecoltePage() {
   const params = useParams();
   const router = useRouter();
+  const { navigate } = useNavigation();
   const { role, logout, organizationName } = useAuth();
   const id = params.id as string;
   const [recolte, setRecolte] = useState<Recolte | null>(null);
@@ -110,9 +112,7 @@ export default function ModifierRecoltePage() {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || "Erreur lors de l'enregistrement.");
       }
-      setMessage({ type: "ok", text: "Récolte modifiée." });
-      router.push(`/historique/${id}`);
-      router.refresh();
+      navigate(`/historique/${id}`);
     } catch (err) {
       setMessage({
         type: "err",
@@ -189,7 +189,7 @@ export default function ModifierRecoltePage() {
             message={message}
             submitLabel="✓ Enregistrer les modifications"
             secondaryLabel="× Annuler"
-            secondaryOnClick={() => router.push(`/historique/${id}`)}
+            secondaryOnClick={() => navigate(`/historique/${id}`)}
           />
         </div>
       </main>

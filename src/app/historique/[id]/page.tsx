@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigation } from "@/contexts/NavigationContext";
 import { BILLETS } from "@/lib/constants";
 import {
   totalBillets,
@@ -17,7 +18,7 @@ import type { Recolte } from "@/lib/types";
 
 export default function DetailRecoltePage() {
   const params = useParams();
-  const router = useRouter();
+  const { navigate } = useNavigation();
   const { role, logout, organizationName } = useAuth();
   const id = params.id as string;
   const [recolte, setRecolte] = useState<Recolte | null>(null);
@@ -58,8 +59,7 @@ export default function DetailRecoltePage() {
       setError("Erreur lors de la suppression.");
       return;
     }
-    router.push("/historique");
-    router.refresh();
+    navigate("/historique");
   };
 
   if (loading) {
