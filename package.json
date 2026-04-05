@@ -8,7 +8,9 @@
         "start": "next start",
         "lint": "next lint",
         "db:migrate": "prisma migrate deploy",
-        "db:studio": "prisma studio"
+        "db:studio": "prisma studio",
+        "create-admin": "node scripts/create-admin.mjs",
+        "seed:orgs-users": "node scripts/seed-orgs-users.mjs"
     },
     "dependencies": {
         "@prisma/client": "^6.19.2",

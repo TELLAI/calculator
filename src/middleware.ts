@@ -1,17 +1,23 @@
-import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export default auth((req) => {
-  const isLoggedIn = !!req.auth;
+export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (!isLoggedIn && pathname !== "/login") {
+  const hasSession =
+    req.cookies.has("authjs.session-token") ||
+    req.cookies.has("__Secure-authjs.session-token");
+
+  if (!hasSession && pathname !== "/login") {
     return NextResponse.redirect(new URL("/login", req.url));
   }
-  if (isLoggedIn && pathname === "/login") {
+
+  if (hasSession && pathname === "/login") {
     return NextResponse.redirect(new URL("/", req.url));
   }
-});
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
