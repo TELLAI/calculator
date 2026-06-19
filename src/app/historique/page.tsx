@@ -12,9 +12,31 @@ import {
   formatRecolteDateLong,
 } from "@/lib/recolte-utils";
 
-function getDateForRecolte(r: Recolte): Date {
-  const str = r.recolte_date || r.created_at;
-  return new Date(str + (r.recolte_date ? "T12:00:00" : ""));
+/** Clé de mois (YYYY-MM) basée sur recolte_date, ou null si absente. */
+function getMonthKey(r: Recolte): string | null {
+  return r.recolte_date ? r.recolte_date.slice(0, 7) : null;
+}
+
+/** Mois courant au format YYYY-MM. */
+function currentMonthKey(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/** Mois précédent (YYYY-MM) à partir d'une clé YYYY-MM. */
+function previousMonthKey(monthKey: string): string {
+  const [year, month] = monthKey.split("-").map(Number);
+  const d = new Date(year, month - 2, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/** Libellé français d'une clé de mois (ex. "mai 2026"). */
+function formatMonthLabel(monthKey: string): string {
+  const [year, month] = monthKey.split("-").map(Number);
+  return new Date(year, month - 1, 1).toLocaleDateString("fr-FR", {
+    month: "long",
+    year: "numeric",
+  });
 }
 
 export default function HistoriquePage() {
@@ -23,6 +45,7 @@ export default function HistoriquePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
 
   const isAdmin = role === "admin";
 
@@ -47,25 +70,33 @@ export default function HistoriquePage() {
     load();
   }, []);
 
+  const recentMonths = useMemo(() => {
+    const m0 = currentMonthKey();
+    const m1 = previousMonthKey(m0);
+    const m2 = previousMonthKey(m1);
+    return [m0, m1, m2];
+  }, []);
+
+  const recoltesAffichees = useMemo(
+    () =>
+      selectedMonth
+        ? recoltes.filter((r) => getMonthKey(r) === selectedMonth)
+        : recoltes,
+    [recoltes, selectedMonth]
+  );
+
   const { totalCollecte, moyenneMois, tendanceMois } = useMemo(() => {
-    const total = recoltes.reduce((s, r) => s + totalRecolte(r), 0);
-    const now = new Date();
-    const yearNow = now.getFullYear();
-    const monthNow = now.getMonth();
+    const moisReference = selectedMonth ?? currentMonthKey();
+    const moisPrecedent = previousMonthKey(moisReference);
 
-    const startCurrentMonth = new Date(yearNow, monthNow, 1);
-    const startPrevMonth = new Date(yearNow, monthNow - 1, 1);
-    const endPrevMonth = new Date(yearNow, monthNow, 0, 23, 59, 59);
-
-    const recoltesMoisEnCours = recoltes.filter(
-      (r) => getDateForRecolte(r) >= startCurrentMonth
+    const recoltesMoisReference = recoltes.filter(
+      (r) => getMonthKey(r) === moisReference
     );
-    const recoltesMoisPrecedent = recoltes.filter((r) => {
-      const d = getDateForRecolte(r);
-      return d >= startPrevMonth && d <= endPrevMonth;
-    });
+    const recoltesMoisPrecedent = recoltes.filter(
+      (r) => getMonthKey(r) === moisPrecedent
+    );
 
-    const totalMoisEnCours = recoltesMoisEnCours.reduce(
+    const totalMoisReference = recoltesMoisReference.reduce(
       (s, r) => s + totalRecolte(r),
       0
     );
@@ -74,22 +105,26 @@ export default function HistoriquePage() {
       0
     );
 
-    const nbRecoltesMoisEnCours = recoltesMoisEnCours.length;
+    const total = selectedMonth
+      ? totalMoisReference
+      : recoltes.reduce((s, r) => s + totalRecolte(r), 0);
+
+    const nbRecoltesMoisReference = recoltesMoisReference.length;
     const moyenneMois =
-      nbRecoltesMoisEnCours > 0
-        ? totalMoisEnCours / nbRecoltesMoisEnCours
+      nbRecoltesMoisReference > 0
+        ? totalMoisReference / nbRecoltesMoisReference
         : 0;
 
     let tendanceMois = 0;
     if (totalMoisPrecedent > 0) {
       tendanceMois =
-        ((totalMoisEnCours - totalMoisPrecedent) / totalMoisPrecedent) * 100;
-    } else if (totalMoisEnCours > 0) {
+        ((totalMoisReference - totalMoisPrecedent) / totalMoisPrecedent) * 100;
+    } else if (totalMoisReference > 0) {
       tendanceMois = 100;
     }
 
     return { totalCollecte: total, moyenneMois, tendanceMois };
-  }, [recoltes]);
+  }, [recoltes, selectedMonth]);
 
   const handleDelete = async (id: string) => {
     if (!isAdmin) return;
@@ -153,7 +188,7 @@ export default function HistoriquePage() {
                 <div className="flex items-center gap-2 text-[var(--muted)]">
                   <span className="text-lg" aria-hidden>📅</span>
                   <span className="text-xs font-medium uppercase">
-                    Total collecté
+                    {selectedMonth ? "Total du mois" : "Total collecté"}
                   </span>
                 </div>
                 <p className="mt-2 text-xl font-semibold text-[var(--foreground)]">
@@ -164,7 +199,7 @@ export default function HistoriquePage() {
                 <div className="flex items-center gap-2 text-[var(--muted)]">
                   <span className="text-lg text-green-600" aria-hidden>📈</span>
                   <span className="text-xs font-medium uppercase">
-                    Moyenne du mois en cours
+                    {selectedMonth ? "Moyenne du mois" : "Moyenne du mois en cours"}
                   </span>
                 </div>
                 <p className="mt-2 text-xl font-semibold text-[var(--foreground)]">
@@ -190,14 +225,40 @@ export default function HistoriquePage() {
             </section>
 
             <section>
-              <div className="mb-3 flex items-center justify-between">
+              <div className="mb-3 flex flex-col gap-3">
                 <h2 className="text-base font-semibold text-[var(--foreground)]">
                   Historique des Récoltes
                 </h2>
-                <span className="text-sm text-[var(--accent)]">Afficher tout</span>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMonth(null)}
+                    className={`rounded-lg border px-3 py-1.5 text-sm font-medium ${
+                      selectedMonth === null
+                        ? "border-[var(--accent)] bg-[var(--accent)] text-white"
+                        : "border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:bg-[var(--background)]"
+                    }`}
+                  >
+                    Tous (3 derniers mois)
+                  </button>
+                  {recentMonths.map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setSelectedMonth(m)}
+                      className={`rounded-lg border px-3 py-1.5 text-sm font-medium capitalize ${
+                        selectedMonth === m
+                          ? "border-[var(--accent)] bg-[var(--accent)] text-white"
+                          : "border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:bg-[var(--background)]"
+                      }`}
+                    >
+                      {formatMonthLabel(m)}
+                    </button>
+                  ))}
+                </div>
               </div>
               <ul className="space-y-4">
-                {recoltes.map((r) => {
+                {recoltesAffichees.map((r) => {
                   const dateStr = r.recolte_date || r.created_at.slice(0, 10);
                   const total = totalRecolte(r);
                   const billets = totalBillets(r);

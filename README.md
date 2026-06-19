@@ -71,3 +71,7 @@ Un job planifié supprime chaque jour les récoltes dont la date de création es
 1. Push le repo sur GitHub.
 2. Connecte le repo à [Vercel](https://vercel.com) et déploie.
 3. Dans les paramètres du projet Vercel, ajoute les variables d’environnement `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+
+## Déploiement VPS (Docker, OVH, etc.)
+
+Pour la connexion SSH, GitHub Actions (SCP), `.env` sur le serveur, migrations Prisma, seed et dépannage : voir **[DEPLOY.md](./DEPLOY.md)**.

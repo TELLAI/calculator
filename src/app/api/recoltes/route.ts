@@ -22,7 +22,7 @@ export async function GET() {
   const recoltes = await prisma.recolte.findMany({
     where: {
       organization_id: session.user.organizationId,
-      created_at: { gte: troisMois },
+      recolte_date: { gte: troisMois },
     },
     orderBy: [{ recolte_date: "desc" }, { created_at: "desc" }],
   });
